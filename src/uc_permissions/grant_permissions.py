@@ -6,7 +6,11 @@ from pyspark.sql import SparkSession
 
 
 def grant_permissions() -> None:
-    """Grants a set of permissions on an object to a principal(user, group, or service principal)
+    """Grants a set of permissions on an object to a list of principals(users, groups, or service principals)
+    If you would like to set different permissions for different principals or set of principals, then create 
+    a separate entry for each set of permissions. Remember that permissions are hierarchical. If you grant a
+    principal permissions on a Catalog, then they will have at least that level of permissions on all objects
+    in the Catalog.
     """
     # Read "grant_permissions_config.ini" & parse configs
     grant_permissions_config_path = (
@@ -15,6 +19,7 @@ def grant_permissions() -> None:
     grant_permissions_config = configparser.ConfigParser()
     grant_permissions_config.read(grant_permissions_config_path)
     permissions = ast.literal_eval(grant_permissions_config["options"]["permissions"])
+    revoke_permissions = ast.literal_eval(grant_permissions_config["options"]["revoke"])
 
     # Get or Create SparkSession
     spark = SparkSession.builder.getOrCreate()
@@ -25,10 +30,16 @@ def grant_permissions() -> None:
         object_type = permission["object_type"]
         grants = ", ".join(str(grant) for grant in permission["grants"])
         principals = permission["principals"]
-        for principal in principals:
-            spark.sql(
-                f"GRANT {grants} ON {object_type} `{object_name}` TO `{principal}`"
-            )
+        if revoke_permissions== True:
+            for principal in principals:
+                spark.sql(
+                    f"REVOKE {grants} ON {object_type} `{object_name}` TO `{principal}`"
+                )
+        else:
+            for principal in principals:
+                spark.sql(
+                    f"GRANT {grants} ON {object_type} `{object_name}` TO `{principal}`"
+                )
 
 
 if __name__ == "__main__":

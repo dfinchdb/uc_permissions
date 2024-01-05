@@ -32,14 +32,22 @@ def grant_permissions() -> None:
         principals = permission["principals"]
         if revoke_permissions== True:
             for principal in principals:
-                spark.sql(
-                    f"REVOKE {grants} ON {object_type} `{object_name}` TO `{principal}`"
-                )
+                try:
+                    spark.sql(
+                        f"REVOKE {grants} ON `{object_name}` FROM `{principal}`"
+                    )
+                    print(f"Successful REVOKE {grants} ON {object_type} `{object_name}` FROM `{principal}`")
+                except:
+                    print(f"Failed REVOKE {grants} ON {object_type} `{object_name}` FROM `{principal}`")
         else:
             for principal in principals:
-                spark.sql(
-                    f"GRANT {grants} ON {object_type} `{object_name}` TO `{principal}`"
-                )
+                try:
+                    spark.sql(
+                        f"GRANT {grants} ON {object_type} `{object_name}` TO `{principal}`"
+                    )
+                    print(f"Successful GRANT {grants} ON {object_type} `{object_name}` TO `{principal}`")
+                except:
+                    print(f"Failed GRANT {grants} ON {object_type} `{object_name}` TO `{principal}`")
 
 
 if __name__ == "__main__":
